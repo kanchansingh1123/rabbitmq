@@ -1,1 +1,1 @@
-# rabbitmq
+# RabbitMQ implementation using Python.
