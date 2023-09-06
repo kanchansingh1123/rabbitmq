@@ -1,0 +1,9 @@
+set ERLANG_HOME=C:\Program Files\Erlang OTP
+set RABBITMQ_NODE_PORT=5682
+set RABBITMQ_DIST_PORT=25682
+set RABBITMQ_NODENAME=rabbit2@localhost
+set RABBITMQ_MNESIA_BASE=C:\tmp\rabbit2
+set RABBITMQ_MNESIA_DIR=C:\tmp\rabbit2\data
+set RABBITMQ_LOG_BASE=C:\tmp\rabbit2\logs
+set RABBITMQ_CONFIG_FILE=C:\RabbitMQ\rabbitmq_server-3.12.4_node2\config\rabbitmq
+set RABBITMQ_ENABLED_PLUGINS_FILE=C:\tmp\rabbit2\enabled_plugins

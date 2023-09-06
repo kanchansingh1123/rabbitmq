@@ -1,0 +1,240 @@
+1) Install Earlang (Under Dependencies) - https://rabbitmq.com/install-windows.html
+2) Downaload RabbitMQ and install from the same URL under - Direct Downloads
+3) Re-Start system.
+4) Open Rabbit MQ Command prompt and run the following command to enable the GUI - 
+
+	rabbitmq-plugins.bat enable rabbitmq_management
+	
+5) Open at browser - localhost:15672
+
+Note: If local host is not working, run the following command from rabbitmq command prompts.
+
+	rabbitmqctl.bat or rabbitmq-plugins.bat
+	
+	
+6) Accessing API -http://localhost:15672/api/nodes
+
+--------------------------------------------------------------------------
+
+
+Installation using distribution
+
+1) https://rabbitmq.com/news.html#2023-08-24T14:00:00+00:00
+
+2) Open Github page of rabbit MQ from above URL. - https://github.com/rabbitmq/rabbitmq-server/releases/
+
+3) Download the latest build - rabbitmq-server-windows-3.12.4.zip
+
+4) Extract the files under - C:\RabbitMQ\
+
+5) copy the downloaded rabitenv.bat at C:\RabbitMQ\
+
+6) Modify the erland and other path in batch file.
+
+6) Execute the rabitenv.bat file from cmd from C:\RabbitMQ\rabbitmq_server-3.12.4\sbin
+
+	..\..\rabitenv.bat
+	
+7) run the following command to start server - 
+
+	rabbitmq-server.bat
+	
+8) Stop the server before installing the following plugin 
+	
+9) Install management plugin, run the following command from C:\RabbitMQ\rabbitmq_server-3.12.4\sbin
+
+	rabbitmq-plugins.bat enable rabbitmq_management
+	
+10) run the following command - 
+		rabbitmq-server.bat
+		
+11) http://localhost:15672/
+
+--------------------------------------- Rabbit MQ Connection States --------------------
+
+See image for different state and more detail
+
+States - Activity of paerticular connection
+
+	1) running - Connection is active and data is flowing.
+	2) flow (Process is sending the data fast) 
+		- Connection is active but  data is throttled(slow/stop, to regulate network traffic and clear up network congestion).
+		- It protects RabbitMQ from DDoS attacks by slowing down processing messages
+	3) Idle - Open but not sending any data.
+	4) Blocking/Blocked - Connection is trying to send too much data and RabbitMQ decided to stop processing messages from this connection.
+	
+------------------- Collecting metrics -------------------------
+
+------------------------- Cluster metrics ----------------------
+
+Cluster metrics can be collected by command line tools and RESTful API.
+
+	* Run  the following command to see all the help (From C:\RabbitMQ\rabbitmq_server-3.12.4\sbin)
+
+		rabbitmqctl --help
+
+	* After running the command you can see the "cluster_status" under the Cluster options.
+	
+	* Run the following coammnd and it gives all the detail related to cluster and it's node. 
+	
+		rabbitmqctl cluster_status
+	
+		rabbitmqctl cluster_status --formatter json
+		
+	** Using RESTful -
+	
+		http://localhost:15672/api/overview
+		
+		curl -s -uguest:guest -XGET http://localhost:15672/api/overview
+		
+		http://localhost:15672/api/nodes
+		
+		http://localhost:15672/api/nodes/rabbit1@localhost
+		
+		http://localhost:15672/api/nodes/rabbit1@localhost?memory=true&binary=true
+		
+		http://localhost:15672/api/exchanges
+		
+		http://localhost:15672/api/queues
+		
+		http://localhost:15672/api/vhosts
+	
+** Types of nodes - Disk or Ram nodes.
+
+** rabbitmqctl status (Overall status of the rabbitmq)
+
+** rabbitmq-diagnostics memory_breakdown
+
+** Network issues - Most common and unpredictable
+
+
+---------------------------------------- Distributed brokers ---------------------------------------------
+
+Notes in a cluster may lose connection between each other due to network issues and split cluster into parts. Such situation is called split brain effect and it's common for all distributed systems.
+
+RabbitMQ nodes are identified by noode names, where node name is a combination of prefix and hostname.
+
+	rabbit1@localhost
+	rabbit2@localhost
+	rabbit3@localhost
+	
+Note: 
+
+	We can run rabbitmq either from environment variables or config file (Similar to rabitenv.bat, config files contains the variable and other configurations).
+	
+	Edit the config file and change the port of management UI which is not available in env.bat file.
+
+
+-------------------------------------------- Clustering Nodes ---------------------------------------------
+
+** Clustering node 1 and 2
+
+	1) Open new terminal and go to the top folder where we have all 3 nodes are setup
+	2) set the enviroment variable for the second node batch file.
+		rabitenv_node2.bat
+	3) Now we have to execute 3 command -
+	
+		rabbitmqctl.bat --node rabbit2@localhost stop_app
+		rabbitmqctl.bat --node rabbit2@localhost join_cluster rabbit1@localhost
+		rabbitmqctl.bat --node rabbit2@localhost start_app
+		
+** Clustering 3rd node
+	1) Open new terminal and go to the top folder where we have all 3 nodes are setup
+	2) set the enviroment variable for the third node batch file.
+		rabitenv_node3.bat
+	3) Now we have to execute 3 command -
+	
+		rabbitmqctl.bat --node rabbit3@localhost stop_app
+		rabbitmqctl.bat --node rabbit3@localhost join_cluster rabbit1@localhost
+		rabbitmqctl.bat --node rabbit3@localhost start_app
+		
+	Node: Now all the nodes are combined and created a big broker.
+		
+** As of now we have different cluster name like - 
+
+	Cluster rabbit1@DESKTOP-65FIKT6
+	Cluster rabbit2@DESKTOP-65FIKT6
+	Cluster rabbit3@DESKTOP-65FIKT6
+	
+	All 3 node should share same cluster name also. It is important from applicatoion prespective.
+	
+	When one node is goes down the application will be looking for the different node in the same cluster.
+	
+	Let's rename all 3 clusters.
+	
+** We can change the cluster name by management UI or also from config file.
+
+	1) Form UI - go to admin tab and find cluster and edit the name.
+	2) Open config file and find cluster_name and modify the name and uncomment it and restart the node.
+	
+	rename to - rabbit@dev.cluster.local
+	
+	This will change the cluster name of all the 3 cluster to rabbit@dev.cluster.local
+	
+*** Important Note: ***
+
+	When RabbitMQ starts and detects it don't have the previously inserted/initialised database, it will check the peer discovery backend value, if value is set to classic config, then it will perform the discovery and attempts to contact each node from the notes array arrived in the order.
+	
+	Finally it will join the cluster of the first reachable node.
+	
+	Hostnames (rabbit1@localhost, rabbit2@localhost and rabbit2@localhost) must be resolved using DNS or localhost file. like /etc/hosts on unix or C:\Windows\ststem32\drivers\etc\hosts
+	
+	cluster_formation.classic_config.nodes.1 = rabbit1@localhost
+	cluster_formation.classic_config.nodes.2 = rabbit2@localhost
+	cluster_formation.classic_config.nodes.3 = rabbit2@localhost
+	
+*** Using DNS based config also we can create cluster. (Using IP addresses)
+
+	Let's assume 
+	
+	-	node1 has ip address - 192.168.0.1
+	-	node2 has ip address - 192.168.0.2
+	
+	
+	and discovery.example has two DNS A record. First record points to the ip of the first node and second one the ip of the second node.
+	
+	When rabbitMQ starts, it will perform reverse DNS lookup for both the IPs returned from the discovery.example.local
+
+
+*************************************** Scalling in cluster ************************************************
+
+*** Stop any node from cluster and notify to other nodes.
+
+	1) stop 3rd node from terminal.
+	2) Load environment variable from node 1 or 2 by running the following commmand
+	
+		rabitenv_node2.bat  - (I have chosen 2)
+	
+	3) Run the following command  
+	
+		rabbitmqctl forget_cluster_node rabbit3@localhost
+		
+	4) Above commmand to notify node 1 and 2 to remove cluster.
+	
+*** Stop any running node from cluster and notify to other nodes.
+
+	1) rabbitmqctl.bat --node rabbit3@localhost stop_app (erlang virtual machine will keep running after this command)
+	
+	2) rabbitmqctl.bat --node rabbit3@localhost reset
+		or
+	   rabbitmqctl.bat --node rabbit3@localhost start_app
+	
+	
+	
+	
+	
+
+	
+
+	
+	
+	
+	
+	
+
+	
+
+ 
+
+
+
